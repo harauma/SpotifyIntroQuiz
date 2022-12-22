@@ -1,12 +1,9 @@
-import { NextPage } from 'next'
+import '../styles/index.css'
+import '../styles/App.css'
 import { AppProps } from 'next/app'
 
-const MyApp: NextPage<AppProps> = ({ Component, pageProps }: AppProps) => {
-  return (
-    <>
-      <Component {...pageProps} />
-    </>
-  )
+function MyApp({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />
 }
 
 export default MyApp
