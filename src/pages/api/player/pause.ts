@@ -4,11 +4,9 @@ import { ExtendNextApiRequest } from 'src/types/Types'
 
 /* SpotifyAPI(音楽停止)呼び出し */
 const pause = (req: ExtendNextApiRequest, res: NextApiResponse) => {
-  const playParams = new URLSearchParams()
-  playParams.append('device_id', req.body.deviceId)
   axios
     .put<void>(
-      `https://api.spotify.com/v1/me/player/pause?${playParams.toString()}`,
+      `https://api.spotify.com/v1/me/player/pause?device_id=${req.body.deviceId}`,
       {},
       {
         headers: {
