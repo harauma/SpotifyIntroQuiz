@@ -13,7 +13,7 @@ const generateRandomString = (length: number): string => {
 }
 
 /* ログイン処理 */
-const login = (req: NextApiRequest, res: NextApiResponse) => {
+const login = (_: NextApiRequest, res: NextApiResponse) => {
   const scope = 'streaming user-read-email user-read-private'
   const spotify_redirect_uri = process.env.APP_URL + '/api/auth/callback'
   const state: string = generateRandomString(16)

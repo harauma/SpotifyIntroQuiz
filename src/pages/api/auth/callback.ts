@@ -1,14 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { serialize, CookieSerializeOptions } from 'cookie'
 import axios from 'axios'
-
-type SpotifyAuthApiResponse = {
-  access_token: string
-  token_type: string
-  scope: string
-  expires_in: number
-  refresh_token: string
-}
+import { SpotifyAuthApiResponse } from 'src/types/Types'
 
 export const setCookie = (
   res: NextApiResponse,
