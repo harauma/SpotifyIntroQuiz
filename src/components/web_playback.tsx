@@ -140,9 +140,6 @@ export const WebPlayback: FC<Props> = ({ token }) => {
             <b>
               Instance not active. Transfer your playback using your Spotify app
             </b>
-            <button className="btn-spotify" onClick={onClickPause}>
-              PAUSE
-            </button>
           </div>
         </div>
       </>
