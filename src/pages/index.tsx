@@ -1,5 +1,4 @@
 import type { NextPage, GetServerSideProps } from 'next'
-import Head from 'next/head'
 import { Login } from '../components/login'
 import { WebPlayback } from '../components/web_playback'
 
@@ -8,19 +7,7 @@ type Props = {
 }
 
 const Home: NextPage<Props> = ({ token }) => {
-  return (
-    <>
-      <Head>
-        <title>Spotify Web Playback Example</title>
-        <meta
-          name="description"
-          content="An example app of Spotify Web Playback SDK based on Next.js and Typescript."
-        />
-      </Head>
-
-      {token === '' ? <Login /> : <WebPlayback token={token} />}
-    </>
-  )
+  return <>{token === '' ? <Login /> : <WebPlayback token={token} />}</>
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

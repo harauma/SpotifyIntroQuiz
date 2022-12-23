@@ -1,15 +1,29 @@
+import { useRouter } from 'next/router'
 import { FC, useState, useEffect } from 'react'
+import axios from 'axios'
 
 type Props = {
   token: string
 }
 
 export const WebPlayback: FC<Props> = ({ token }) => {
+  const router = useRouter()
   const [is_paused, setPaused] = useState<boolean>(false)
   const [is_active, setActive] = useState<boolean>(false)
   const [player, setPlayer] = useState<Spotify.Player | null>(null)
   const [current_track, setTrack] = useState<Spotify.Track | null>(null)
+  const [deviceId, setDeviceId] = useState<string>('')
+  const [queryParam, setQueryParam] = useState<string>('')
 
+  /* URLパラメータ取得 */
+  useEffect(() => {
+    if (!router.isReady) {
+      return
+    }
+    setQueryParam((router.query['device_id'] as string) || '')
+  }, [router.query])
+
+  /* SDK読み込み */
   useEffect(() => {
     const script = document.createElement('script')
     script.src = 'https://sdk.scdn.co/spotify-player.js'
@@ -30,6 +44,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
 
       player.addListener('ready', ({ device_id }) => {
         console.log('Ready with Device ID', device_id)
+        setDeviceId(device_id)
       })
 
       player.addListener('not_ready', ({ device_id }) => {
@@ -57,6 +72,56 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     }
   }, [token])
 
+  /* 音楽停止処理 */
+  const onClickPause = () => {
+    axios.post(
+      '/api/player/pause',
+      {
+        token: token,
+        deviceId: queryParam,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+  }
+
+  /* 音楽スキップ処理 */
+  const onClickNext = () => {
+    axios.post(
+      '/api/player/next',
+      {
+        token: token,
+        deviceId: queryParam,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+  }
+
+  /* ゲスト招待リンクコピー処理 */
+  const onClickLinkButton = () => {
+    // router.push({
+    //   pathname: '/',
+    //   query: { device_id: deviceId },
+    // })
+    const URL = `${document.URL}${token}?device_id=${deviceId}`
+    console.log(URL)
+    navigator.clipboard.writeText(URL).then(
+      function () {
+        console.log('Async: Copying to clipboard was successful!')
+      },
+      function (err) {
+        console.error('Async: Could not copy text: ', err)
+      },
+    )
+  }
+
   if (!player) {
     return (
       <>
@@ -75,6 +140,9 @@ export const WebPlayback: FC<Props> = ({ token }) => {
             <b>
               Instance not active. Transfer your playback using your Spotify app
             </b>
+            <button className="btn-spotify" onClick={onClickPause}>
+              PAUSE
+            </button>
           </div>
         </div>
       </>
@@ -98,7 +166,8 @@ export const WebPlayback: FC<Props> = ({ token }) => {
               <div className="now-playing__artist">
                 {current_track?.artists[0].name}
               </div>
-
+            </div>
+            <div>
               <button
                 className="btn-spotify"
                 onClick={() => {
@@ -124,6 +193,19 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 }}
               >
                 &gt;&gt;
+              </button>
+            </div>
+            <div>
+              <button className="btn-spotify" onClick={onClickPause}>
+                PAUSE
+              </button>
+
+              <button className="btn-spotify" onClick={onClickNext}>
+                NEXT
+              </button>
+
+              <button className="btn-spotify" onClick={onClickLinkButton}>
+                link
               </button>
             </div>
           </div>
