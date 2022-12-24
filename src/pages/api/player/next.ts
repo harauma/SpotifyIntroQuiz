@@ -16,11 +16,11 @@ const next = (req: ExtendNextApiRequest, res: NextApiResponse) => {
       },
     )
     .then(() => {
-      res.status(204).redirect('/?' + req.body).end
+      res.status(204).end()
     })
     .catch((error) => {
       console.error(`Error: ${error}`)
-      res.status(400).redirect('/?' + req.body).end
+      res.status(400).end()
     })
 }
 
