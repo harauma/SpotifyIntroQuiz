@@ -8,6 +8,7 @@ type Props = {
 
 export const WebPlayback: FC<Props> = () => {
   const router = useRouter()
+  const [isClick, setIsClick] = useState<boolean>(false)
   const [token, setToken] = useState<string>('')
   const [queryParam, setQueryParam] = useState<string>('')
 
@@ -22,6 +23,7 @@ export const WebPlayback: FC<Props> = () => {
 
   /* 音楽停止処理 */
   const onClickPause = () => {
+    setIsClick(true)
     axios.post(
       '/api/player/pause',
       {
@@ -40,9 +42,22 @@ export const WebPlayback: FC<Props> = () => {
     <>
       <div className="container">
         <div className="main-wrapper">
-          <button className="btn-spotify" onClick={onClickPause}>
-            PAUSE
-          </button>
+          <div className="column">
+            <div>
+              <button
+                className="btn-spotify"
+                onClick={onClickPause}
+                disabled={isClick}
+              >
+                PAUSE
+              </button>
+            </div>
+            <div>
+              <button className="btn-spotify" onClick={() => setIsClick(false)}>
+                解除
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>
