@@ -7,10 +7,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     <>
       <Head>
         <title>SpotifyIntroQuiz</title>
-        <meta
-          name="description"
-          content="An example app of Spotify Web Playback SDK based on Next.js and Typescript."
-        />
+        <meta name="description" content="Spotifyを使ったイントロドンアプリ" />
       </Head>
       <Component {...pageProps} />
     </>
