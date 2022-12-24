@@ -78,6 +78,8 @@ export const WebPlayback: FC<Props> = ({ token }) => {
 
   /* toggleで曲名表示非表示切り替え */
   const onClickNowPlayingToggle = () => {
+    // 再生中に非表示状態の場合は表示できないように
+    if (isHide && !is_paused) return
     setIsHide(!isHide)
   }
 
