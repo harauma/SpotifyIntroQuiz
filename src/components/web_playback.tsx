@@ -1,4 +1,5 @@
 import { FC, useState, useEffect } from 'react'
+import axios from 'axios'
 import styles from '../styles/components/web_playback.module.scss'
 
 type Props = {
@@ -101,6 +102,33 @@ export const WebPlayback: FC<Props> = ({ token }) => {
             <b>
               Instance not active. Transfer your playback using your Spotify app
             </b>
+            <button
+              className="button btn-spotify"
+              onClick={() => {
+                player
+                  .togglePlay()
+                  .then(() => {})
+                  .catch((error) => {
+                    if (error.status === 401) {
+                      axios
+                        .post(
+                          '/api/auth/refresh',
+                          {},
+                          {
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                          },
+                        )
+                        .then(() => {
+                          player.togglePlay()
+                        })
+                    }
+                  })
+              }}
+            >
+              {is_paused ? 'PLAY' : 'PAUSE'}
+            </button>
           </div>
         </div>
       </>
@@ -151,7 +179,26 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                   <button
                     className="button btn-spotify"
                     onClick={() => {
-                      player.togglePlay()
+                      player
+                        .togglePlay()
+                        .then(() => {})
+                        .catch((error) => {
+                          if (error.status === 401) {
+                            axios
+                              .post(
+                                '/api/auth/refresh',
+                                {},
+                                {
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                },
+                              )
+                              .then(() => {
+                                player.togglePlay()
+                              })
+                          }
+                        })
                     }}
                   >
                     {is_paused ? 'PLAY' : 'PAUSE'}

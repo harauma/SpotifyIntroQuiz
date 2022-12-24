@@ -5,11 +5,12 @@ import { SpotifyAuthApiResponse } from 'src/types/Types'
 
 export const setCookie = (
   res: NextApiResponse,
-  name: string,
-  value: unknown,
+  cookies: {
+    name: string
+    value: unknown
+  }[],
 ) => {
-  const stringValue =
-    typeof value === 'object' ? 'j:' + JSON.stringify(value) : String(value)
+  const setValues: string[] = []
 
   const options: CookieSerializeOptions = {
     httpOnly: true,
@@ -17,7 +18,14 @@ export const setCookie = (
     path: '/',
   }
 
-  res.setHeader('Set-Cookie', serialize(name, stringValue, options))
+  cookies.forEach((cookie) => {
+    const stringValue =
+      typeof cookie.value === 'object'
+        ? 'j:' + JSON.stringify(cookie.value)
+        : String(cookie.value)
+    setValues.push(serialize(cookie.name, stringValue, options))
+  })
+  res.setHeader('Set-Cookie', setValues)
 }
 
 const callback = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -64,8 +72,18 @@ const callback = async (req: NextApiRequest, res: NextApiResponse) => {
       },
     )
     .then((response) => {
-      if (response.data.access_token) {
-        setCookie(res, 'spotify-token', response.data.access_token)
+      if (response.data.access_token && response.data.refresh_token) {
+        const cookies = [
+          {
+            name: 'spotify-token',
+            value: response.data.access_token,
+          },
+          {
+            name: 'spotify-refreshToken',
+            value: response.data.refresh_token,
+          },
+        ]
+        setCookie(res, cookies)
         res.status(200).redirect('/')
       }
     })
