@@ -11,6 +11,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [player, setPlayer] = useState<Spotify.Player | null>(null)
   const [current_track, setTrack] = useState<Spotify.Track | null>(null)
   const [deviceId, setDeviceId] = useState<string>('')
+  const [isHide, setIsHide] = useState(false)
 
   /* SDK読み込み */
   useEffect(() => {
@@ -75,6 +76,11 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     )
   }
 
+  /* toggleで曲名表示非表示切り替え */
+  const onClickNowPlayingToggle = () => {
+    setIsHide(!isHide)
+  }
+
   if (!player) {
     return (
       <>
@@ -103,7 +109,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         <div className="container">
           <div className="now-playing__area">
             <div className="main-wrapper">
-              <div>
+              <div className={isHide ? 'hide' : ''}>
                 {current_track && current_track.album.images[0].url ? (
                   <img
                     src={current_track.album.images[0].url}
@@ -112,11 +118,19 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                   />
                 ) : null}
               </div>
-              <div className="now-playing__text-area">
-                <div className="now-playing__name">{current_track?.name}</div>
-                <div className="now-playing__artist">
-                  {current_track?.artists[0].name}
+              <div className="now-playing__right">
+                <div className={isHide ? 'hide' : 'now-playing__text-area'}>
+                  <div className="now-playing__name">{current_track?.name}</div>
+                  <div className="now-playing__artist">
+                    {current_track?.artists[0].name}
+                  </div>
                 </div>
+                <button
+                  className="button btn-spotify"
+                  onClick={onClickNowPlayingToggle}
+                >
+                  曲名非表示
+                </button>
               </div>
             </div>
             <div className={styles['controll-area']}>
