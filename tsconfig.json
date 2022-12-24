@@ -14,7 +14,10 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true
+    "incremental": true,
+    "paths": {
+      "@styles/*": ["./src/styles/*"]
+    }
   },
   "exclude": ["node_modules", "deployments", ".next", "out"],
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"]

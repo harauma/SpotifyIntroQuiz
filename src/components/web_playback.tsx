@@ -1,27 +1,16 @@
-import { useRouter } from 'next/router'
 import { FC, useState, useEffect } from 'react'
-import axios from 'axios'
+import styles from '../styles/components/web_playback.module.scss'
 
 type Props = {
   token: string
 }
 
 export const WebPlayback: FC<Props> = ({ token }) => {
-  const router = useRouter()
   const [is_paused, setPaused] = useState<boolean>(false)
   const [is_active, setActive] = useState<boolean>(false)
   const [player, setPlayer] = useState<Spotify.Player | null>(null)
   const [current_track, setTrack] = useState<Spotify.Track | null>(null)
   const [deviceId, setDeviceId] = useState<string>('')
-  const [queryParam, setQueryParam] = useState<string>('')
-
-  /* URLパラメータ取得 */
-  useEffect(() => {
-    if (!router.isReady) {
-      return
-    }
-    setQueryParam((router.query['device_id'] as string) || '')
-  }, [router.query])
 
   /* SDK読み込み */
   useEffect(() => {
@@ -70,46 +59,10 @@ export const WebPlayback: FC<Props> = ({ token }) => {
 
       player.connect()
     }
-  }, [token])
-
-  /* 音楽停止処理 */
-  const onClickPause = () => {
-    axios.post(
-      '/api/player/pause',
-      {
-        token: token,
-        deviceId: queryParam,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    )
-  }
-
-  /* 音楽スキップ処理 */
-  const onClickNext = () => {
-    axios.post(
-      '/api/player/next',
-      {
-        token: token,
-        deviceId: queryParam,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    )
-  }
+  }, [])
 
   /* ゲスト招待リンクコピー処理 */
   const onClickLinkButton = () => {
-    // router.push({
-    //   pathname: '/',
-    //   query: { device_id: deviceId },
-    // })
     const URL = `${document.URL}${token}?device_id=${deviceId}`
     console.log(URL)
     navigator.clipboard.writeText(URL).then(
@@ -148,62 +101,65 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     return (
       <>
         <div className="container">
-          <div className="main-wrapper">
-            <div className=""></div>
-            {current_track && current_track.album.images[0].url ? (
-              <img
-                src={current_track.album.images[0].url}
-                className="now-playing__cover"
-                alt=""
-              />
-            ) : null}
-
-            <div className="now-playing__side">
-              <div className="now-playing__name">{current_track?.name}</div>
-              <div className="now-playing__artist">
-                {current_track?.artists[0].name}
+          <div className="now-playing__area">
+            <div className="main-wrapper">
+              <div>
+                {current_track && current_track.album.images[0].url ? (
+                  <img
+                    src={current_track.album.images[0].url}
+                    className="now-playing__cover"
+                    alt=""
+                  />
+                ) : null}
+              </div>
+              <div className="now-playing__text-area">
+                <div className="now-playing__name">{current_track?.name}</div>
+                <div className="now-playing__artist">
+                  {current_track?.artists[0].name}
+                </div>
               </div>
             </div>
-            <div>
-              <button
-                className="btn-spotify"
-                onClick={() => {
-                  player.previousTrack()
-                }}
-              >
-                &lt;&lt;
-              </button>
-
-              <button
-                className="btn-spotify"
-                onClick={() => {
-                  player.togglePlay()
-                }}
-              >
-                {is_paused ? 'PLAY' : 'PAUSE'}
-              </button>
-
-              <button
-                className="btn-spotify"
-                onClick={() => {
-                  player.nextTrack()
-                }}
-              >
-                &gt;&gt;
-              </button>
-            </div>
-            <div>
-              <button className="btn-spotify" onClick={onClickPause}>
-                PAUSE
-              </button>
-
-              <button className="btn-spotify" onClick={onClickNext}>
-                NEXT
-              </button>
-
-              <button className="btn-spotify" onClick={onClickLinkButton}>
-                link
-              </button>
+            <div className={styles['controll-area']}>
+              <div className={styles['controll-area-top']}>
+                <div>
+                  <button
+                    className="btn-spotify"
+                    onClick={() => {
+                      player.previousTrack()
+                    }}
+                  >
+                    &lt;&lt;
+                  </button>
+                </div>
+                <div className={styles['play-button']}>
+                  <button
+                    className="button btn-spotify"
+                    onClick={() => {
+                      player.togglePlay()
+                    }}
+                  >
+                    {is_paused ? 'PLAY' : 'PAUSE'}
+                  </button>
+                </div>
+                <div>
+                  <button
+                    className="btn-spotify"
+                    onClick={() => {
+                      player.nextTrack()
+                    }}
+                  >
+                    &gt;&gt;
+                  </button>
+                </div>
+              </div>
+              <div>
+                <button
+                  className="button btn-spotify"
+                  onClick={onClickLinkButton}
+                >
+                  link
+                </button>
+              </div>
             </div>
           </div>
         </div>

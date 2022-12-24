@@ -1,0 +1,16 @@
+.controll-area{
+  display: inline-block;
+  text-align: center;
+  width: 30vw;
+  &-top {
+    display: flex;
+    gap: 5px;
+    justify-content: space-evenly;
+    margin-bottom: 10px;
+  }
+}
+
+.play-button {
+  flex: 1;
+  align-items: center;
+}
