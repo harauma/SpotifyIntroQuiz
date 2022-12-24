@@ -16,7 +16,6 @@ const next = (req: ExtendNextApiRequest, res: NextApiResponse) => {
       },
     )
     .then(() => {
-      console.log('Next!!')
       res.status(204).redirect('/?' + req.body).end
     })
     .catch((error) => {

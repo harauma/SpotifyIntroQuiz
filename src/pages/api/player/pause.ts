@@ -16,7 +16,6 @@ const pause = (req: ExtendNextApiRequest, res: NextApiResponse) => {
       },
     )
     .then(() => {
-      console.log('Pause!!')
       res.status(204).redirect('/?' + req.body).end
     })
     .catch((error) => {
