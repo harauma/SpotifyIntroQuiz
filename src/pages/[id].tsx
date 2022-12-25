@@ -39,7 +39,6 @@ export const WebPlayback: FC<Props> = () => {
     get(dbRef)
       .then((snapshot) => {
         if (snapshot.exists()) {
-          console.log(snapshot.val())
           setToken(snapshot.val().token)
           setDeviceId(snapshot.val().deviceId)
         } else {
@@ -60,7 +59,6 @@ export const WebPlayback: FC<Props> = () => {
     try {
       const dbRef = ref(db, `intro/${roomId}`)
       return onChildAdded(dbRef, (snapshot) => {
-        console.log(snapshot.val())
         const value = snapshot.val()
         setAnsers((prev) => [
           ...prev,
@@ -159,7 +157,7 @@ export const WebPlayback: FC<Props> = () => {
             </div>
             <div>
               <input value={name} onChange={(e) => setName(e.target.value)} />
-              <p>{name}</p>
+              <p>回答者名：{name}</p>
             </div>
             <div>
               <button className="btn-spotify" onClick={onClickAnserButton}>

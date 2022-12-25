@@ -10,7 +10,6 @@ const anser = (req: ExtendNextApiRequest, res: NextApiResponse) => {
   const db = getDatabase(firebaseApp)
   const now = dayjs()
 
-  console.log(now.format())
   push(ref(db, 'intro'), {
     time: now.format(),
   })

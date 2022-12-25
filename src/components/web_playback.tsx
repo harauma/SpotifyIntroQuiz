@@ -6,6 +6,7 @@ import { FirebaseError } from '@firebase/util'
 import firebaseApp from '@src/lib/firebase/firebase'
 import styles from '@styles/components/web_playback.module.scss'
 import { Anser } from '@src/types/Types'
+import { get, onChildRemoved, push, remove, update } from 'firebase/database'
 
 type Props = {
   token: string
@@ -22,7 +23,6 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [deviceId, setDeviceId] = useState<string>('')
   const [isHide, setIsHide] = useState(false)
   const [ansers, setAnsers] = useState<Anser[]>([])
-  const [count, setCount] = useState(0)
 
   /* roomId生成 */
   useEffect(() => {
@@ -95,7 +95,28 @@ export const WebPlayback: FC<Props> = ({ token }) => {
             time: value.time,
           },
         ])
-        console.log(ansers)
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [roomId])
+
+  /* introレコードの削除検知 */
+  useEffect(() => {
+    if (roomId === '') {
+      return
+    }
+    try {
+      const dbRef = ref(db, `intro/${roomId}`)
+      return onChildRemoved(dbRef, (snapshot) => {
+        setAnsers((prev) =>
+          prev.filter((ans) => {
+            return ans.time !== snapshot.val().time
+          }),
+        )
       })
     } catch (e) {
       if (e instanceof FirebaseError) {
@@ -134,6 +155,62 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     // 再生中に非表示状態の場合は表示できないように
     if (isHide && !is_paused) return
     setIsHide(!isHide)
+  }
+
+  /* 正解ボタン押下時処理 */
+  const onClickCorrectButton = () => {
+    // result/roomid/users/nameに点数登録
+    try {
+      let dbRef = ref(db, `result/${roomId}/users`)
+      get(dbRef)
+        .then((snapshot) => {
+          const value = snapshot.val()
+          if (snapshot.exists()) {
+            const key = Object.keys(value).find((key) => {
+              return value[key].name === ansers[0].name
+            })
+            if (key !== undefined) {
+              dbRef = ref(db, `result/${roomId}/users/${key}`)
+              update(dbRef, {
+                name: value[key].name,
+                score: value[key].score + 1,
+              })
+            } else {
+              push(dbRef, {
+                name: ansers[0].name,
+                score: 1,
+              })
+            }
+          } else {
+            dbRef = ref(db, `result/${roomId}/users`)
+            push(dbRef, {
+              name: ansers[0].name,
+              score: 1,
+            })
+          }
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
+    // introHistryに回答記録をコピー
+    try {
+      const dbRef = ref(db, `introHistry/${roomId}`)
+      push(dbRef, {
+        musicName: current_track?.name,
+        ansers,
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
+    // intro/roomuid配下をクリア
+    remove(ref(db, `intro/${roomId}`))
   }
 
   if (!player) {
@@ -255,6 +332,11 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                     </p>
                   </div>
                 ))}
+              </div>
+              <div>
+                <button className="btn-spotify" onClick={onClickCorrectButton}>
+                  正解
+                </button>
               </div>
             </div>
           </div>
