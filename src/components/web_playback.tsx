@@ -1,20 +1,35 @@
 import { FC, useState, useEffect } from 'react'
 import axios from 'axios'
-import styles from '../styles/components/web_playback.module.scss'
+import { v4 as uuid_v4 } from 'uuid'
+import { getDatabase, onChildAdded, ref, set } from '@firebase/database'
+import { FirebaseError } from '@firebase/util'
+import firebaseApp from '@src/lib/firebase/firebase'
+import styles from '@styles/components/web_playback.module.scss'
+import { Anser } from '@src/types/Types'
 
 type Props = {
   token: string
 }
 
 export const WebPlayback: FC<Props> = ({ token }) => {
+  const db = getDatabase(firebaseApp)
+  // sessionStorage.setItem('roomId', uuid_v4())
+  const [roomId, setRoomId] = useState<string>('')
   const [is_paused, setPaused] = useState<boolean>(false)
   const [is_active, setActive] = useState<boolean>(false)
   const [player, setPlayer] = useState<Spotify.Player | null>(null)
   const [current_track, setTrack] = useState<Spotify.Track | null>(null)
   const [deviceId, setDeviceId] = useState<string>('')
   const [isHide, setIsHide] = useState(false)
+  const [ansers, setAnsers] = useState<Anser[]>([])
+  const [count, setCount] = useState(0)
 
-  /* SDK読み込み */
+  /* roomId生成 */
+  useEffect(() => {
+    setRoomId(uuid_v4())
+  }, [])
+
+  /* Spotify SDK読み込み */
   useEffect(() => {
     const script = document.createElement('script')
     script.src = 'https://sdk.scdn.co/spotify-player.js'
@@ -63,10 +78,47 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     }
   }, [])
 
-  /* ゲスト招待リンクコピー処理 */
+  /* introレコードの追加検知 */
+  useEffect(() => {
+    if (roomId === '') {
+      return
+    }
+    setAnsers([])
+    try {
+      const dbRef = ref(db, `intro/${roomId}`)
+      return onChildAdded(dbRef, (snapshot) => {
+        const value = snapshot.val()
+        setAnsers((prev) => [
+          ...prev,
+          {
+            name: value.name,
+            time: value.time,
+          },
+        ])
+        console.log(ansers)
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [roomId])
+
+  /* ゲスト招待用レコード作成、リンクコピー処理 */
   const onClickLinkButton = () => {
-    const URL = `${document.URL}${token}?device_id=${deviceId}`
-    console.log(URL)
+    try {
+      const dbRefResult = ref(db, `result/${roomId}`)
+      set(dbRefResult, {
+        token: token,
+        deviceId: deviceId,
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
+    const URL = `${document.URL}${roomId}`
     navigator.clipboard.writeText(URL).then(
       function () {
         console.log('Async: Copying to clipboard was successful!')
@@ -195,6 +247,14 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 >
                   link
                 </button>
+                <p>回答者</p>
+                {ansers.map((anser, index) => (
+                  <div key={anser.time}>
+                    <p>
+                      {index + 1}番：{anser.name}({anser.time})
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

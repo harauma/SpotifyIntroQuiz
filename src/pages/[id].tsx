@@ -2,6 +2,7 @@ import { useRouter } from 'next/router'
 import { FC, useState, useEffect } from 'react'
 import axios from 'axios'
 import {
+  get,
   getDatabase,
   onChildAdded,
   onChildRemoved,
@@ -12,37 +13,62 @@ import {
 import { FirebaseError } from '@firebase/util'
 import dayjs from 'dayjs'
 import firebaseApp from '@src/lib/firebase/firebase'
+import { Anser } from '@src/types/Types'
 
 type Props = {
   token: string
 }
 
 export const WebPlayback: FC<Props> = () => {
+  const db = getDatabase(firebaseApp)
   const router = useRouter()
   const [isClick, setIsClick] = useState<boolean>(false)
   const [token, setToken] = useState<string>('')
-  const [queryParam, setQueryParam] = useState<string>('')
-  const [ansers, setAnsers] = useState<{ time: string }[]>([])
+  const [deviceId, setDeviceId] = useState<string>('')
+  const [roomId, setRoomId] = useState<string>('')
+  const [name, setName] = useState<string>('')
+  const [ansers, setAnsers] = useState<Anser[]>([])
 
   /* URLパラメータ取得処理 */
   useEffect(() => {
     if (!router.isReady) {
       return
     }
-    setToken((router.query['id'] as string) || '')
-    setQueryParam((router.query['device_id'] as string) || '')
+    setRoomId((router.query['id'] as string) || '')
+    const dbRef = ref(db, `result/${roomId}`)
+    get(dbRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          console.log(snapshot.val())
+          setToken(snapshot.val().token)
+          setDeviceId(snapshot.val().deviceId)
+        } else {
+          console.log('No data available')
+        }
+      })
+      .catch((error) => {
+        console.error(error)
+      })
   }, [router.query])
 
   /* introレコードの追加検知 */
   useEffect(() => {
+    if (roomId === '') {
+      return
+    }
     setAnsers([])
     try {
-      const db = getDatabase(firebaseApp)
-      const dbRef = ref(db, 'intro')
+      const dbRef = ref(db, `intro/${roomId}`)
       return onChildAdded(dbRef, (snapshot) => {
         console.log(snapshot.val())
         const value = snapshot.val()
-        setAnsers((prev) => [...prev, { time: value.time }])
+        setAnsers((prev) => [
+          ...prev,
+          {
+            name: value.name,
+            time: value.time,
+          },
+        ])
       })
     } catch (e) {
       if (e instanceof FirebaseError) {
@@ -50,15 +76,16 @@ export const WebPlayback: FC<Props> = () => {
       }
       return
     }
-  }, [])
+  }, [roomId])
 
   /* introレコードの削除検知 */
   useEffect(() => {
+    if (roomId === '') {
+      return
+    }
     try {
-      const db = getDatabase(firebaseApp)
-      const dbRef = ref(db, 'intro')
+      const dbRef = ref(db, `intro/${roomId}`)
       return onChildRemoved(dbRef, (snapshot) => {
-        console.log('removed!')
         setAnsers((prev) =>
           prev.filter((ans) => {
             return ans.time !== snapshot.val().time
@@ -71,7 +98,7 @@ export const WebPlayback: FC<Props> = () => {
       }
       return
     }
-  }, [])
+  }, [roomId])
 
   /* 音楽停止処理 */
   const onClickPause = () => {
@@ -80,7 +107,7 @@ export const WebPlayback: FC<Props> = () => {
       '/api/player/pause',
       {
         token: token,
-        deviceId: queryParam,
+        deviceId: deviceId,
       },
       {
         headers: {
@@ -94,9 +121,9 @@ export const WebPlayback: FC<Props> = () => {
   const onClickAnserButton = () => {
     const now = dayjs()
     try {
-      const db = getDatabase(firebaseApp)
-      const dbRef = ref(db, 'intro')
+      const dbRef = ref(db, `intro/${roomId}`)
       push(dbRef, {
+        name: name,
         time: now.format('YYYY/MM/DD HH:mm:ss.SSS'),
       })
     } catch (e) {
@@ -106,9 +133,8 @@ export const WebPlayback: FC<Props> = () => {
     }
   }
 
-  /* 回答ボタン押下時処理 */
+  /* 回答クリアボタン押下時処理 */
   const onClickAnserClearButton = () => {
-    const db = getDatabase(firebaseApp)
     remove(ref(db, 'intro'))
   }
 
@@ -132,6 +158,10 @@ export const WebPlayback: FC<Props> = () => {
               </button>
             </div>
             <div>
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+              <p>{name}</p>
+            </div>
+            <div>
               <button className="btn-spotify" onClick={onClickAnserButton}>
                 回答
               </button>
@@ -142,8 +172,12 @@ export const WebPlayback: FC<Props> = () => {
               </button>
             </div>
             <div>
-              {ansers.map((anser) => (
-                <p key={anser.time}>{anser.time}</p>
+              {ansers.map((anser, index) => (
+                <div key={anser.time}>
+                  <p>
+                    {index + 1}番：{anser.name}({anser.time})
+                  </p>
+                </div>
               ))}
             </div>
           </div>

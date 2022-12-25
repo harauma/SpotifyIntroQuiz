@@ -14,3 +14,8 @@ export interface SpotifyAuthApiResponse {
   expires_in: number
   refresh_token: string
 }
+
+export interface Anser {
+  name: string
+  time: string
+}
