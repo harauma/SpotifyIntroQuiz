@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "incremental": true,
     "paths": {
+      "@src/*": ["./src/*"],
       "@styles/*": ["./src/styles/*"]
     }
   },

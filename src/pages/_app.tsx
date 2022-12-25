@@ -1,7 +1,9 @@
 import { AppProps } from 'next/app'
 import Head from 'next/head'
 import '../styles/App.scss'
+import { initializeFirebaseApp } from '@src/lib/firebase/firebase'
 
+initializeFirebaseApp()
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
