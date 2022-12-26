@@ -116,7 +116,6 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     if (roomId === '') {
       return
     }
-    setAnsers([])
     try {
       const dbRef = ref(db, `intro/${roomId}`)
       return onChildRemoved(dbRef, (snapshot) => {
