@@ -19,3 +19,9 @@ export interface Anser {
   name: string
   time: string
 }
+
+export interface Ranking {
+  [name: string]: {
+    score: number
+  }
+}

@@ -5,8 +5,15 @@ import { getDatabase, onChildAdded, ref, set } from '@firebase/database'
 import { FirebaseError } from '@firebase/util'
 import firebaseApp from '@src/lib/firebase/firebase'
 import styles from '@styles/components/web_playback.module.scss'
-import { Anser } from '@src/types/Types'
-import { get, onChildRemoved, push, remove, update } from 'firebase/database'
+import { Anser, Ranking } from '@src/types/Types'
+import {
+  get,
+  onChildChanged,
+  onChildRemoved,
+  push,
+  remove,
+  update,
+} from 'firebase/database'
 
 type Props = {
   token: string
@@ -14,7 +21,6 @@ type Props = {
 
 export const WebPlayback: FC<Props> = ({ token }) => {
   const db = getDatabase(firebaseApp)
-  // sessionStorage.setItem('roomId', uuid_v4())
   const [roomId, setRoomId] = useState<string>('')
   const [is_paused, setPaused] = useState<boolean>(false)
   const [is_active, setActive] = useState<boolean>(false)
@@ -23,6 +29,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [deviceId, setDeviceId] = useState<string>('')
   const [isHide, setIsHide] = useState(false)
   const [ansers, setAnsers] = useState<Anser[]>([])
+  const [ranking, setRanking] = useState<Ranking>({})
 
   /* roomId生成 */
   useEffect(() => {
@@ -109,6 +116,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     if (roomId === '') {
       return
     }
+    setAnsers([])
     try {
       const dbRef = ref(db, `intro/${roomId}`)
       return onChildRemoved(dbRef, (snapshot) => {
@@ -125,6 +133,67 @@ export const WebPlayback: FC<Props> = ({ token }) => {
       return
     }
   }, [roomId])
+
+  /* 点数記録の追加検知 */
+  useEffect(() => {
+    if (roomId === '') {
+      return
+    }
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      return onChildAdded(dbRef, getRankingData)
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [roomId])
+
+  /* 点数記録の変更検知 */
+  useEffect(() => {
+    if (roomId === '') {
+      return
+    }
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      return onChildChanged(dbRef, getRankingData)
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [roomId])
+
+  // ランキングデータ取得
+  const getRankingData = () => {
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      get(dbRef)
+        .then((snapshot) => {
+          const value = snapshot.val()
+          if (snapshot.exists()) {
+            let rank: Ranking = {}
+            Object.keys(value).forEach((key) => {
+              rank = Object.assign(rank, {
+                [value[key].name]: {
+                  score: value[key].score,
+                },
+              })
+            })
+            setRanking(rank)
+          }
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
+  }
 
   /* ゲスト招待用レコード作成、リンクコピー処理 */
   const onClickLinkButton = () => {
@@ -158,32 +227,50 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   }
 
   /* 正解ボタン押下時処理 */
-  const onClickCorrectButton = () => {
+  const onClickCorrectButton = async () => {
+    if (ansers.length < 1) {
+      return
+    }
+
+    // introHistryに回答記録をコピー
+    try {
+      const dbRef = ref(db, `introHistry/${roomId}`)
+      await push(dbRef, {
+        musicName: current_track?.name,
+        ansers,
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
+
     // result/roomid/users/nameに点数登録
     try {
       let dbRef = ref(db, `result/${roomId}/users`)
-      get(dbRef)
-        .then((snapshot) => {
+      await get(dbRef)
+        .then(async (snapshot) => {
           const value = snapshot.val()
           if (snapshot.exists()) {
+            // 正解者の登録済みの点数を絞り込み
             const key = Object.keys(value).find((key) => {
               return value[key].name === ansers[0].name
             })
             if (key !== undefined) {
               dbRef = ref(db, `result/${roomId}/users/${key}`)
-              update(dbRef, {
+              await update(dbRef, {
                 name: value[key].name,
                 score: value[key].score + 1,
               })
             } else {
-              push(dbRef, {
+              await push(dbRef, {
                 name: ansers[0].name,
                 score: 1,
               })
             }
           } else {
             dbRef = ref(db, `result/${roomId}/users`)
-            push(dbRef, {
+            await push(dbRef, {
               name: ansers[0].name,
               score: 1,
             })
@@ -197,20 +284,15 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         console.log(e)
       }
     }
-    // introHistryに回答記録をコピー
+
+    // intro/roomuid配下をクリア
     try {
-      const dbRef = ref(db, `introHistry/${roomId}`)
-      push(dbRef, {
-        musicName: current_track?.name,
-        ansers,
-      })
+      await remove(ref(db, `intro/${roomId}`))
     } catch (e) {
       if (e instanceof FirebaseError) {
         console.log(e)
       }
     }
-    // intro/roomuid配下をクリア
-    remove(ref(db, `intro/${roomId}`))
   }
 
   if (!player) {
@@ -326,7 +408,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 </button>
                 <p>回答者</p>
                 {ansers.map((anser, index) => (
-                  <div key={anser.time}>
+                  <div key={index}>
                     <p>
                       {index + 1}番：{anser.name}({anser.time})
                     </p>
@@ -337,6 +419,14 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 <button className="btn-spotify" onClick={onClickCorrectButton}>
                   正解
                 </button>
+              </div>
+              <div>
+                {Object.keys(ranking).length > 0 ? <p>回答者</p> : ''}
+                {Object.keys(ranking).map((name, index) => (
+                  <p key={index}>
+                    {index + 1}位：{name}({ranking[name].score}問)
+                  </p>
+                ))}
               </div>
             </div>
           </div>
