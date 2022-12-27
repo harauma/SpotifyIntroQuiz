@@ -22,6 +22,7 @@ type Props = {
 export const WebPlayback: FC<Props> = () => {
   const db = getDatabase(firebaseApp)
   const router = useRouter()
+  const [registered, setRegistered] = useState<boolean>(false)
   const [disabled, setDisabled] = useState<boolean>(false)
   const [token, setToken] = useState<string>('')
   const [deviceId, setDeviceId] = useState<string>('')
@@ -137,34 +138,81 @@ export const WebPlayback: FC<Props> = () => {
     }
   }
 
+  /* 名前登録ボタン押下時処理 */
+  const onClickSubmitButton = () => {
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      get(dbRef)
+        .then((snapshot) => {
+          // users配下にデータが登録されているか
+          const value = snapshot.val()
+          if (snapshot.exists()) {
+            // 入力した名前のデータを絞り込み
+            const key = Object.keys(value).find((key) => {
+              return value[key].name === name
+            })
+            if (key === undefined) {
+              push(dbRef, {
+                name: name,
+                score: 0,
+              })
+            }
+          } else {
+            push(dbRef, {
+              name: name,
+              score: 0,
+            })
+          }
+          setRegistered(true)
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
+  }
+
   return (
     <>
       <div className="container">
         <div className="main-wrapper">
-          <div className="column">
+          {!registered ? (
             <div>
+              <div>
+                <p className="center">名前を登録してください</p>
+              </div>
               <input value={name} onChange={(e) => setName(e.target.value)} />
-              <p>回答者名：{name}</p>
+              <button className="btn-spotify" onClick={onClickSubmitButton}>
+                登録
+              </button>
             </div>
-            <AnserButton
-              disabled={disabled}
-              setDisabled={setDisabled}
-              onClickButton={onClickAnserButton}
-            />
-            <div>
-              {ansers
-                .sort((a, b) => {
-                  return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
-                })
-                .map((anser, index) => (
-                  <div key={anser.time}>
-                    <p>
-                      {index + 1}番：{anser.name}({anser.time})
-                    </p>
-                  </div>
-                ))}
+          ) : (
+            <div className="column">
+              <p className="center">あなたの名前：{name}</p>
+              <AnserButton
+                disabled={disabled}
+                setDisabled={setDisabled}
+                onClickButton={onClickAnserButton}
+              />
+              <div>
+                {Object.keys(ansers).length > 0 ? <p>回答順</p> : ''}
+                {ansers
+                  .sort((a, b) => {
+                    return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
+                  })
+                  .map((anser, index) => (
+                    <div key={anser.time}>
+                      <p>
+                        {index + 1}番：{anser.name}({anser.time})
+                      </p>
+                    </div>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>
