@@ -146,11 +146,6 @@ export const WebPlayback: FC<Props> = () => {
               <input value={name} onChange={(e) => setName(e.target.value)} />
               <p>回答者名：{name}</p>
             </div>
-            <div>
-              <button className="btn-spotify" onClick={onClickAnserButton}>
-                回答
-              </button>
-            </div>
             <AnserButton
               disabled={disabled}
               setDisabled={setDisabled}
