@@ -176,13 +176,17 @@ export const WebPlayback: FC<Props> = () => {
               }}
             />
             <div>
-              {ansers.map((anser, index) => (
-                <div key={anser.time}>
-                  <p>
-                    {index + 1}番：{anser.name}({anser.time})
-                  </p>
-                </div>
-              ))}
+              {ansers
+                .sort((a, b) => {
+                  return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
+                })
+                .map((anser, index) => (
+                  <div key={anser.time}>
+                    <p>
+                      {index + 1}番：{anser.name}({anser.time})
+                    </p>
+                  </div>
+                ))}
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   remove,
   update,
 } from 'firebase/database'
+import dayjs from 'dayjs'
 
 type Props = {
   token: string
@@ -407,13 +408,17 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 </button>
                 <p>{`${document.URL}${roomId}`}</p>
                 <p>回答者</p>
-                {ansers.map((anser, index) => (
-                  <div key={index}>
-                    <p>
-                      {index + 1}番：{anser.name}({anser.time})
-                    </p>
-                  </div>
-                ))}
+                {ansers
+                  .sort((a, b) => {
+                    return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
+                  })
+                  .map((anser, index) => (
+                    <div key={index}>
+                      <p>
+                        {index + 1}番：{anser.name}({anser.time})
+                      </p>
+                    </div>
+                  ))}
               </div>
               <div>
                 <button className="btn-spotify" onClick={onClickCorrectButton}>
@@ -421,12 +426,16 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 </button>
               </div>
               <div>
-                {Object.keys(ranking).length > 0 ? <p>回答者</p> : ''}
-                {Object.keys(ranking).map((name, index) => (
-                  <p key={index}>
-                    {index + 1}位：{name}({ranking[name].score}問)
-                  </p>
-                ))}
+                {Object.keys(ranking).length > 0 ? <p>ランキング</p> : ''}
+                {Object.keys(ranking)
+                  .sort((a, b) => {
+                    return ranking[a].score > ranking[b].score ? -1 : 1
+                  })
+                  .map((name, index) => (
+                    <p key={index}>
+                      {index + 1}位：{name}({ranking[name].score}問)
+                    </p>
+                  ))}
               </div>
             </div>
           </div>
