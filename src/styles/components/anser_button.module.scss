@@ -4,6 +4,7 @@
   display: block;
   margin: 0 auto;
   position: relative;
+  user-select: none;
   &:hover {
     cursor: pointer;
   }
