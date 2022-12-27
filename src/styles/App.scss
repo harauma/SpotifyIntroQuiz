@@ -26,7 +26,7 @@ code {
     monospace;
 }
 
-.button {
+.full-width {
   width: 100%;
 }
 
@@ -37,6 +37,10 @@ code {
 
 .left {
   text-align: left;
+}
+
+.margin-bottom {
+  margin-bottom: 15px;
 }
 
 .App-header {
@@ -56,6 +60,10 @@ code {
 
 .hide {
   visibility: hidden;
+}
+
+.show {
+  visibility: visible;
 }
 
 .background {

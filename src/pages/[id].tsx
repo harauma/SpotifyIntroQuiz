@@ -184,10 +184,21 @@ export const WebPlayback: FC<Props> = () => {
               <div>
                 <p className="center">名前を登録してください</p>
               </div>
-              <input value={name} onChange={(e) => setName(e.target.value)} />
-              <button className="btn-spotify" onClick={onClickSubmitButton}>
-                登録
-              </button>
+              <div>
+                <input
+                  className="full-width margin-bottom"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <button
+                  className="full-width btn-spotify"
+                  onClick={onClickSubmitButton}
+                >
+                  登録
+                </button>
+              </div>
             </div>
           ) : (
             <div className="column">

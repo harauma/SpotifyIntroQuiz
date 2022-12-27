@@ -15,6 +15,7 @@ import {
   update,
 } from 'firebase/database'
 import dayjs from 'dayjs'
+import useSound from 'use-sound'
 
 type Props = {
   token: string
@@ -22,6 +23,9 @@ type Props = {
 
 export const WebPlayback: FC<Props> = ({ token }) => {
   const db = getDatabase(firebaseApp)
+  const [playCorrectSound] = useSound('/mp3/correct.mp3')
+  const [playWrongSound] = useSound('/mp3/wrong.mp3')
+  const [playResultSound] = useSound('/mp3/result.mp3')
   const [roomId, setRoomId] = useState<string>('')
   const [is_paused, setPaused] = useState<boolean>(false)
   const [is_active, setActive] = useState<boolean>(false)
@@ -244,7 +248,14 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const onClickNowPlayingToggle = () => {
     // 再生中に非表示状態の場合は表示できないように
     if (isHide && !is_paused) return
-    setIsHide(!isHide)
+    if (isHide) {
+      playResultSound()
+      setTimeout(() => {
+        setIsHide(!isHide)
+      }, 2500)
+    } else {
+      setIsHide(!isHide)
+    }
   }
 
   /* 正解ボタン押下時処理 */
@@ -252,6 +263,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
     if (ansers.length < 1) {
       return
     }
+    playCorrectSound()
 
     // introHistryに回答記録をコピー
     try {
@@ -306,9 +318,19 @@ export const WebPlayback: FC<Props> = ({ token }) => {
       }
     }
 
-    // intro/roomuid配下をクリア
+    deleteIntro()
+  }
+
+  /* 不正解ボタン押下時処理 */
+  const onClickWrongButton = () => {
+    playWrongSound()
+    deleteIntro()
+  }
+
+  /* 早押し結果をクリア */
+  const deleteIntro = () => {
     try {
-      await remove(ref(db, `intro/${roomId}`))
+      remove(ref(db, `intro/${roomId}`))
     } catch (e) {
       if (e instanceof FirebaseError) {
         console.log(e)
@@ -344,7 +366,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         <div className="container">
           <div className="now-playing__area">
             <div className="main-wrapper">
-              <div className={isHide ? 'hide' : ''}>
+              <div className={isHide ? 'hide' : 'show'}>
                 {current_track && current_track.album.images[0].url ? (
                   <img
                     src={current_track.album.images[0].url}
@@ -354,14 +376,16 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 ) : null}
               </div>
               <div className="now-playing__right">
-                <div className={isHide ? 'hide' : 'now-playing__text-area'}>
+                <div
+                  className={isHide ? 'hide' : 'now-playing__text-area show'}
+                >
                   <div className="now-playing__name">{current_track?.name}</div>
                   <div className="now-playing__artist">
                     {current_track?.artists[0].name}
                   </div>
                 </div>
                 <button
-                  className="button btn-spotify"
+                  className="full-width btn-spotify"
                   onClick={onClickNowPlayingToggle}
                 >
                   曲名非表示
@@ -382,7 +406,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 </div>
                 <div className={styles['play-button']}>
                   <button
-                    className="button btn-spotify"
+                    className="full-width btn-spotify"
                     onClick={() => {
                       player
                         .togglePlay()
@@ -422,7 +446,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
               </div>
               <div>
                 <button
-                  className="button btn-spotify"
+                  className="full-width btn-spotify"
                   onClick={onClickLinkButton}
                 >
                   link
@@ -443,10 +467,16 @@ export const WebPlayback: FC<Props> = ({ token }) => {
               </div>
               <div>
                 <button
-                  className="button btn-spotify"
+                  className="full-width btn-spotify margin-bottom"
                   onClick={onClickCorrectButton}
                 >
                   正解
+                </button>
+                <button
+                  className="full-width btn-spotify"
+                  onClick={onClickWrongButton}
+                >
+                  不正解
                 </button>
               </div>
               <div>
