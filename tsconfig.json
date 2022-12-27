@@ -4,6 +4,7 @@
     "target": "es5",
     "module": "esnext",
     "jsx": "preserve",
+    "jsxImportSource": "@emotion/react",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

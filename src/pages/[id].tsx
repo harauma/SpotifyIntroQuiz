@@ -14,6 +14,7 @@ import dayjs from 'dayjs'
 import firebaseApp from '@src/lib/firebase/firebase'
 import { Anser } from '@src/types/Types'
 import { AnserButton } from '../components/anser_button'
+import { Button, TextField } from '@mui/material'
 
 type Props = {
   token: string
@@ -182,22 +183,31 @@ export const WebPlayback: FC<Props> = () => {
           {!registered ? (
             <div>
               <div>
-                <p className="center">名前を登録してください</p>
+                <p className="center mb">あなたの名前を教えてください</p>
               </div>
               <div>
-                <input
-                  className="full-width margin-bottom"
+                <TextField
+                  fullWidth
+                  label="名前"
+                  variant="outlined"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  sx={{
+                    mb: 1,
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'white', // 通常時のボーダー色(アウトライン)
+                      },
+                    },
+                  }}
                 />
-              </div>
-              <div>
-                <button
-                  className="full-width btn-spotify"
+                <Button
+                  fullWidth
+                  variant="contained"
                   onClick={onClickSubmitButton}
                 >
                   登録
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
