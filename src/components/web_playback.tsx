@@ -182,6 +182,27 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 },
               })
             })
+            rank = Object.keys(rank)
+              .sort((a, b) => {
+                // オブジェクトをスコアの降順にソート
+                return rank[a].score > rank[b].score ? -1 : 1
+              })
+              .reduce((prev: Ranking, name, index): Ranking => {
+                // 順位をオブジェクトに設定(同一の正解数の場合は同順位)
+                const someOrder = Object.keys(prev).find((key) => {
+                  return key !== name && prev[key].score === rank[name].score
+                })
+                return {
+                  ...prev,
+                  [name]: {
+                    score: rank[name].score,
+                    order:
+                      someOrder && prev[someOrder].order
+                        ? prev[someOrder].order
+                        : index + 1,
+                  },
+                }
+              }, {})
             setRanking(rank)
           }
         })
@@ -407,35 +428,38 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                   link
                 </button>
                 <p>{`${document.URL}${roomId}`}</p>
-                <p>回答者</p>
+                <p className="left">回答者</p>
                 {ansers
                   .sort((a, b) => {
                     return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
                   })
                   .map((anser, index) => (
                     <div key={index}>
-                      <p>
+                      <p className="left">
                         {index + 1}番：{anser.name}({anser.time})
                       </p>
                     </div>
                   ))}
               </div>
               <div>
-                <button className="btn-spotify" onClick={onClickCorrectButton}>
+                <button
+                  className="button btn-spotify"
+                  onClick={onClickCorrectButton}
+                >
                   正解
                 </button>
               </div>
               <div>
-                {Object.keys(ranking).length > 0 ? <p>ランキング</p> : ''}
-                {Object.keys(ranking)
-                  .sort((a, b) => {
-                    return ranking[a].score > ranking[b].score ? -1 : 1
-                  })
-                  .map((name, index) => (
-                    <p key={index}>
-                      {index + 1}位：{name}({ranking[name].score}問)
-                    </p>
-                  ))}
+                {Object.keys(ranking).length > 0 ? (
+                  <p className="left">ランキング</p>
+                ) : (
+                  ''
+                )}
+                {Object.keys(ranking).map((name, index) => (
+                  <p className="left" key={index}>
+                    {ranking[name].order}位：{name}({ranking[name].score}問)
+                  </p>
+                ))}
               </div>
             </div>
           </div>

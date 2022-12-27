@@ -30,8 +30,13 @@ code {
   width: 100%;
 }
 
-.App, .center {
+.App,
+.center {
   text-align: center;
+}
+
+.left {
+  text-align: left;
 }
 
 .App-header {

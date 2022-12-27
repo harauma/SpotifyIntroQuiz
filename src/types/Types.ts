@@ -23,5 +23,6 @@ export interface Anser {
 export interface Ranking {
   [name: string]: {
     score: number
+    order?: number
   }
 }
