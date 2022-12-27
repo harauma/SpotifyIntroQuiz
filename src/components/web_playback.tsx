@@ -405,6 +405,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 >
                   link
                 </button>
+                <p>{`${document.URL}${roomId}`}</p>
                 <p>回答者</p>
                 {ansers.map((anser, index) => (
                   <div key={index}>

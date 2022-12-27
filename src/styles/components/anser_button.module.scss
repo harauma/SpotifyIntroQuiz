@@ -1,0 +1,71 @@
+.buzzer-quiz-button {
+  width: 300px;
+  height: 300px;
+  display: block;
+  margin: 0 auto;
+  position: relative;
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.buzzer-quiz-button div {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.buzzer-quiz-button div.button-top {
+  width: 250px;
+  height: 250px;
+  margin: 0 25px;
+}
+
+.button-top1 {
+  background-color: #dc5a1c;
+  clip-path: ellipse(50% 25% at 50% 43%);
+  z-index: 1000;
+}
+
+.buzzer-quiz-button:active div.button-top1 {
+  transform: translateY(5px);
+}
+
+.buzzer-quiz-button div.button-top2 {
+  background-color: #ae231d;
+  clip-path: ellipse(50% 25% at 50% 53%);
+  z-index: 995;
+}
+
+.buzzer-quiz-button div.button-top3 {
+  background-color: #ae231d;
+  clip-path: polygon(0 42%, 100% 42%, 100% 54%, 0 54%);
+  z-index: 990;
+}
+
+.buzzer-quiz-button:active div.button-top3 {
+  clip-path: polygon(0 45%, 100% 45%, 100% 54%, 0 54%);
+}
+
+.buzzer-quiz-button div.button-bottom {
+  width: 300px;
+  height: 300px;
+}
+
+.buzzer-quiz-button div.button-bottom1 {
+  background-color: #f2f5c4;
+  clip-path: ellipse(50% 27% at 50% 50%);
+  z-index: 985;
+}
+
+.buzzer-quiz-button div.button-bottom2 {
+  background-color: b19969;
+  clip-path: polygon(0 50%, 100% 50%, 100% 64%, 0 64%);
+  z-index: 980;
+}
+
+.buzzer-quiz-button div.button-bottom3 {
+  background-color: #b19969;
+  clip-path: ellipse(50% 27% at 50% 64%);
+  z-index: 975;
+}

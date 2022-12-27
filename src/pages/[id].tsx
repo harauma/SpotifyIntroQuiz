@@ -8,12 +8,12 @@ import {
   onChildRemoved,
   ref,
   push,
-  remove,
 } from '@firebase/database'
 import { FirebaseError } from '@firebase/util'
 import dayjs from 'dayjs'
 import firebaseApp from '@src/lib/firebase/firebase'
 import { Anser } from '@src/types/Types'
+import { AnserButton } from '../components/anser_button'
 
 type Props = {
   token: string
@@ -22,7 +22,7 @@ type Props = {
 export const WebPlayback: FC<Props> = () => {
   const db = getDatabase(firebaseApp)
   const router = useRouter()
-  const [isClick, setIsClick] = useState<boolean>(false)
+  const [disabled, setDisabled] = useState<boolean>(false)
   const [token, setToken] = useState<string>('')
   const [deviceId, setDeviceId] = useState<string>('')
   const [roomId, setRoomId] = useState<string>('')
@@ -34,8 +34,12 @@ export const WebPlayback: FC<Props> = () => {
     if (!router.isReady) {
       return
     }
-    setRoomId((router.query['id'] as string) || '')
-    const dbRef = ref(db, `result/${roomId}`)
+    const id = (router.query['id'] as string) || ''
+    if (id === undefined) {
+      return
+    }
+    setRoomId(id)
+    const dbRef = ref(db, `result/${id}`)
     get(dbRef)
       .then((snapshot) => {
         if (snapshot.exists()) {
@@ -48,7 +52,7 @@ export const WebPlayback: FC<Props> = () => {
       .catch((error) => {
         console.error(error)
       })
-  }, [router.query])
+  }, [router, router.query])
 
   /* introレコードの追加検知 */
   useEffect(() => {
@@ -89,6 +93,7 @@ export const WebPlayback: FC<Props> = () => {
             return ans.time !== snapshot.val().time
           }),
         )
+        setDisabled(false)
       })
     } catch (e) {
       if (e instanceof FirebaseError) {
@@ -100,7 +105,7 @@ export const WebPlayback: FC<Props> = () => {
 
   /* 音楽停止処理 */
   const onClickPause = () => {
-    setIsClick(true)
+    setDisabled(true)
     axios.post(
       '/api/player/pause',
       {
@@ -131,11 +136,6 @@ export const WebPlayback: FC<Props> = () => {
     }
   }
 
-  /* 回答クリアボタン押下時処理 */
-  const onClickAnserClearButton = () => {
-    remove(ref(db, 'intro'))
-  }
-
   return (
     <>
       <div className="container">
@@ -145,13 +145,16 @@ export const WebPlayback: FC<Props> = () => {
               <button
                 className="btn-spotify"
                 onClick={onClickPause}
-                disabled={isClick}
+                disabled={disabled}
               >
                 PAUSE(1押下で非活性に)
               </button>
             </div>
             <div>
-              <button className="btn-spotify" onClick={() => setIsClick(false)}>
+              <button
+                className="btn-spotify"
+                onClick={() => setDisabled(false)}
+              >
                 PAUSE非活性解除
               </button>
             </div>
@@ -164,11 +167,14 @@ export const WebPlayback: FC<Props> = () => {
                 回答
               </button>
             </div>
-            <div>
-              <button className="btn-spotify" onClick={onClickAnserClearButton}>
-                回答クリア
-              </button>
-            </div>
+            <AnserButton
+              disabled={disabled}
+              setDisabled={setDisabled}
+              onClickButton={() => {
+                onClickPause()
+                onClickAnserButton()
+              }}
+            />
             <div>
               {ansers.map((anser, index) => (
                 <div key={anser.time}>
