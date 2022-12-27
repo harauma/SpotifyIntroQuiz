@@ -103,26 +103,27 @@ export const WebPlayback: FC<Props> = () => {
     }
   }, [roomId])
 
-  /* 音楽停止処理 */
-  const onClickPause = () => {
-    setDisabled(true)
-    axios.post(
-      '/api/player/pause',
-      {
-        token: token,
-        deviceId: deviceId,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    )
-  }
-
   /* 回答ボタン押下時処理 */
   const onClickAnserButton = () => {
+    setDisabled(true)
     const now = dayjs()
+    try {
+      axios.post(
+        '/api/player/pause',
+        {
+          token: token,
+          deviceId: deviceId,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+    } catch (e) {
+      console.error(e)
+    }
+
     try {
       const dbRef = ref(db, `intro/${roomId}`)
       push(dbRef, {
@@ -142,23 +143,6 @@ export const WebPlayback: FC<Props> = () => {
         <div className="main-wrapper">
           <div className="column">
             <div>
-              <button
-                className="btn-spotify"
-                onClick={onClickPause}
-                disabled={disabled}
-              >
-                PAUSE(1押下で非活性に)
-              </button>
-            </div>
-            <div>
-              <button
-                className="btn-spotify"
-                onClick={() => setDisabled(false)}
-              >
-                PAUSE非活性解除
-              </button>
-            </div>
-            <div>
               <input value={name} onChange={(e) => setName(e.target.value)} />
               <p>回答者名：{name}</p>
             </div>
@@ -170,10 +154,7 @@ export const WebPlayback: FC<Props> = () => {
             <AnserButton
               disabled={disabled}
               setDisabled={setDisabled}
-              onClickButton={() => {
-                onClickPause()
-                onClickAnserButton()
-              }}
+              onClickButton={onClickAnserButton}
             />
             <div>
               {ansers
