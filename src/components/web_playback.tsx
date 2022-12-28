@@ -16,6 +16,7 @@ import {
 } from 'firebase/database'
 import dayjs from 'dayjs'
 import useSound from 'use-sound'
+import { Link, Typography } from '@mui/material'
 
 type Props = {
   token: string
@@ -379,17 +380,17 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 <div
                   className={isHide ? 'hide' : 'now-playing__text-area show'}
                 >
-                  <div className="now-playing__name">{current_track?.name}</div>
+                  <div className="now-playing__name">
+                    <Typography className="center" variant="body1" gutterBottom>
+                      {current_track?.name}
+                    </Typography>
+                  </div>
                   <div className="now-playing__artist">
-                    {current_track?.artists[0].name}
+                    <Typography className="center" variant="body1" gutterBottom>
+                      {current_track?.artists[0].name}
+                    </Typography>
                   </div>
                 </div>
-                <button
-                  className="full-width btn-spotify"
-                  onClick={onClickNowPlayingToggle}
-                >
-                  曲名非表示
-                </button>
               </div>
             </div>
             <div className={styles['controll-area']}>
@@ -446,12 +447,34 @@ export const WebPlayback: FC<Props> = ({ token }) => {
               </div>
               <div>
                 <button
+                  className="full-width mb btn-spotify"
+                  onClick={onClickNowPlayingToggle}
+                >
+                  {isHide ? '曲名表示' : '曲名非表示'}
+                </button>
+              </div>
+              <div>
+                <Link
+                  color="white"
+                  href={`${document.URL}${roomId}`}
+                  underline="hover"
+                  sx={{
+                    mb: 1,
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'white', // 通常時のボーダー色(アウトライン)
+                      },
+                    },
+                  }}
+                >
+                  {`${document.URL}${roomId}`}
+                </Link>
+                <button
                   className="full-width btn-spotify"
                   onClick={onClickLinkButton}
                 >
-                  link
+                  linkコピー
                 </button>
-                <p>{`${document.URL}${roomId}`}</p>
                 <p className="left">回答者</p>
                 {ansers
                   .sort((a, b) => {

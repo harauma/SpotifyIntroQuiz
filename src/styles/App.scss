@@ -26,7 +26,8 @@ code {
     monospace;
 }
 
-p {
+p,
+a {
   font-size: calc(10px + 2vmin) !important; // 仮で実装
 }
 
