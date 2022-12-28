@@ -27,6 +27,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [playCorrectSound] = useSound('/mp3/correct.mp3')
   const [playWrongSound] = useSound('/mp3/wrong.mp3')
   const [playResultSound] = useSound('/mp3/result.mp3')
+  const [playQuestionSound] = useSound('/mp3/question.mp3')
   const [roomId, setRoomId] = useState<string>('')
   const [wrongUserKey, setWrongUserKey] = useState<string>('')
   const [is_paused, setPaused] = useState<boolean>(false)
@@ -216,6 +217,15 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         console.log(e)
       }
     }
+  }
+
+  /* 問題出題処理 */
+  const nextTrack = () => {
+    if (!player) {
+      return
+    }
+    playQuestionSound()
+    player.nextTrack()
   }
 
   /* ゲスト招待用レコード作成、リンクコピー処理 */
@@ -494,12 +504,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                   </button>
                 </div>
                 <div>
-                  <button
-                    className="btn-spotify"
-                    onClick={() => {
-                      player.nextTrack()
-                    }}
-                  >
+                  <button className="btn-spotify" onClick={nextTrack}>
                     &gt;&gt;
                   </button>
                 </div>
@@ -540,56 +545,56 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 )}
               </div>
             </div>
-            <div className={styles['users-area']}>
-              <div className={styles['users-area-left']}>
-                <p className="left">回答者</p>
-                {ansers.length > 0 ? (
-                  ansers
-                    .sort((a, b) => {
-                      return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
-                    })
-                    .map((anser, index) => (
-                      <div key={index}>
-                        <p className="left">
-                          {index + 1}番：{anser.name}({anser.time})
-                        </p>
-                      </div>
-                    ))
-                ) : (
-                  <p className="left">対象のユーザーが存在しません</p>
-                )}
-                {ansers.length > 0 ? (
-                  <>
-                    <button
-                      className="full-width btn-spotify margin-bottom"
-                      onClick={() => onClickCorrectButton(ansers[0].name)}
-                    >
-                      正解
-                    </button>
-                    <button
-                      className="full-width btn-spotify"
-                      onClick={() => onClickWrongButton(ansers[0].name)}
-                    >
-                      不正解
-                    </button>
-                  </>
-                ) : (
-                  ''
-                )}
-              </div>
-              <div className={styles['users-area-right']}>
-                <p className="left">ランキング</p>
-                {Object.keys(ranking).length > 0 ? (
-                  ''
-                ) : (
-                  <p className="left">対象のユーザーが存在しません</p>
-                )}
-                {Object.keys(ranking).map((name, index) => (
-                  <p className="left" key={index}>
-                    {ranking[name].order}位：{name}({ranking[name].score}問)
-                  </p>
-                ))}
-              </div>
+          </div>
+          <div className={styles['users-area']}>
+            <div className={styles['users-area-left']}>
+              <p className="left">回答者</p>
+              {ansers.length > 0 ? (
+                ansers
+                  .sort((a, b) => {
+                    return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
+                  })
+                  .map((anser, index) => (
+                    <div key={index}>
+                      <p className="left">
+                        {index + 1}番：{anser.name}({anser.time})
+                      </p>
+                    </div>
+                  ))
+              ) : (
+                <p className="left">対象のユーザーが存在しません</p>
+              )}
+              {ansers.length > 0 ? (
+                <>
+                  <button
+                    className="full-width btn-spotify margin-bottom"
+                    onClick={() => onClickCorrectButton(ansers[0].name)}
+                  >
+                    正解
+                  </button>
+                  <button
+                    className="full-width btn-spotify"
+                    onClick={() => onClickWrongButton(ansers[0].name)}
+                  >
+                    不正解
+                  </button>
+                </>
+              ) : (
+                ''
+              )}
+            </div>
+            <div className={styles['users-area-right']}>
+              <p className="left">ランキング</p>
+              {Object.keys(ranking).length > 0 ? (
+                ''
+              ) : (
+                <p className="left">対象のユーザーが存在しません</p>
+              )}
+              {Object.keys(ranking).map((name, index) => (
+                <p className="left" key={index}>
+                  {ranking[name].order}位：{name}({ranking[name].score}問)
+                </p>
+              ))}
             </div>
           </div>
         </div>
