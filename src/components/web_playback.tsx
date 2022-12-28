@@ -38,11 +38,6 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [ansers, setAnsers] = useState<Anser[]>([])
   const [ranking, setRanking] = useState<User>({})
 
-  /* roomId生成 */
-  useEffect(() => {
-    setRoomId(uuid_v4())
-  }, [])
-
   /* Spotify SDK読み込み */
   useEffect(() => {
     const script = document.createElement('script')
@@ -225,15 +220,19 @@ export const WebPlayback: FC<Props> = ({ token }) => {
 
   /* ゲスト招待用レコード作成、リンクコピー処理 */
   const onClickLinkButton = () => {
-    try {
-      const dbRefResult = ref(db, `result/${roomId}`)
-      set(dbRefResult, {
-        token: token,
-        deviceId: deviceId,
-      })
-    } catch (e) {
-      if (e instanceof FirebaseError) {
-        console.log(e)
+    // roomIdが未生成の場合のみ生成処理
+    if (roomId === '') {
+      setRoomId(uuid_v4())
+      try {
+        const dbRefResult = ref(db, `result/${roomId}`)
+        set(dbRefResult, {
+          token: token,
+          deviceId: deviceId,
+        })
+      } catch (e) {
+        if (e instanceof FirebaseError) {
+          console.log(e)
+        }
       }
     }
     const URL = `${document.URL}${roomId}`
@@ -255,7 +254,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
       playResultSound()
       setTimeout(() => {
         setIsHide(!isHide)
-      }, 2500)
+      }, 2400)
     } else {
       setIsHide(!isHide)
     }
@@ -514,26 +513,30 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 </button>
               </div>
               <div>
-                <Link
-                  color="white"
-                  href={`${document.URL}${roomId}`}
-                  underline="hover"
-                  sx={{
-                    mb: 1,
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'white', // 通常時のボーダー色(アウトライン)
+                {roomId !== '' ? (
+                  <Link
+                    color="white"
+                    href={`${document.URL}${roomId}`}
+                    underline="hover"
+                    sx={{
+                      mb: 1,
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'white', // 通常時のボーダー色(アウトライン)
+                        },
                       },
-                    },
-                  }}
-                >
-                  {`${document.URL}${roomId}`}
-                </Link>
+                    }}
+                  >
+                    {`${document.URL}${roomId}`}
+                  </Link>
+                ) : (
+                  <p>リンクが生成されていません</p>
+                )}
                 <button
                   className="full-width btn-spotify"
                   onClick={onClickLinkButton}
                 >
-                  linkコピー
+                  {roomId !== '' ? 'リンクコピー' : 'リンク生成'}
                 </button>
                 <p className="left">回答者</p>
                 {ansers
