@@ -230,11 +230,12 @@ export const WebPlayback: FC<Props> = ({ token }) => {
 
   /* ゲスト招待用レコード作成、リンクコピー処理 */
   const onClickLinkButton = () => {
+    const uuid = uuid_v4()
     // roomIdが未生成の場合のみ生成処理
     if (roomId === '') {
-      setRoomId(uuid_v4())
+      setRoomId(uuid)
       try {
-        const dbRefResult = ref(db, `result/${roomId}`)
+        const dbRefResult = ref(db, `result/${uuid}`)
         set(dbRefResult, {
           token: token,
           deviceId: deviceId,
@@ -245,7 +246,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         }
       }
     }
-    const URL = `${document.URL}${roomId}`
+    const URL = document.URL + (roomId !== '' ? roomId : uuid)
     navigator.clipboard.writeText(URL).then(
       function () {
         console.log('Async: Copying to clipboard was successful!')
