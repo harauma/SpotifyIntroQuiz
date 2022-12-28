@@ -414,7 +414,9 @@ export const WebPlayback: FC<Props> = ({ token }) => {
       <>
         <div className="container">
           <div className="main-wrapper">
-            <b>Spotify Player is null</b>
+            <Typography className="center" variant="body1" gutterBottom>
+              Spotify Player is null
+            </Typography>
           </div>
         </div>
       </>
@@ -424,9 +426,9 @@ export const WebPlayback: FC<Props> = ({ token }) => {
       <>
         <div className="container">
           <div className="main-wrapper">
-            <b>
+            <Typography className="center" variant="body1" gutterBottom>
               Instance not active. Transfer your playback using your Spotify app
-            </b>
+            </Typography>
           </div>
         </div>
       </>
