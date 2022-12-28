@@ -5,6 +5,7 @@ import {
   get,
   getDatabase,
   onChildAdded,
+  onChildChanged,
   onChildRemoved,
   ref,
   push,
@@ -12,7 +13,7 @@ import {
 import { FirebaseError } from '@firebase/util'
 import dayjs from 'dayjs'
 import firebaseApp from '@src/lib/firebase/firebase'
-import { Anser } from '@src/types/Types'
+import { Anser, User } from '@src/types/Types'
 import { AnserButton } from '../components/anser_button'
 import { Button, TextField, Typography } from '@mui/material'
 import { Container } from '@mui/system'
@@ -32,6 +33,7 @@ export const WebPlayback: FC<Props> = () => {
   const [roomId, setRoomId] = useState<string>('')
   const [name, setName] = useState<string>('')
   const [ansers, setAnsers] = useState<Anser[]>([])
+  const [users, setUsers] = useState<User>({})
 
   /* URLパラメータ取得処理 */
   useEffect(() => {
@@ -107,6 +109,62 @@ export const WebPlayback: FC<Props> = () => {
     }
   }, [roomId])
 
+  /* userレコードの追加検知 */
+  useEffect(() => {
+    if (roomId === '' || name === '') {
+      return
+    }
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      return onChildAdded(dbRef, (snapshot) => {
+        const value = snapshot.val()
+        console.log(value)
+        setUsers((prev) => {
+          return {
+            ...prev,
+            [value.name]: {
+              score: value.score,
+              canAnser: value.canAnser,
+            },
+          }
+        })
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [registered])
+
+  /* userレコード変更検知 */
+  useEffect(() => {
+    if (roomId === '' || name === '') {
+      return
+    }
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      return onChildChanged(dbRef, (snapshot) => {
+        const value = snapshot.val()
+        console.log(value)
+        setUsers((prev) => {
+          return {
+            ...prev,
+            [value.name]: {
+              score: value.score,
+              canAnser: value.canAnser,
+            },
+          }
+        })
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [registered])
+
   /* 回答ボタン押下時処理 */
   const onClickAnserButton = () => {
     setDisabled(true)
@@ -147,6 +205,7 @@ export const WebPlayback: FC<Props> = () => {
       const dbRef = ref(db, `result/${roomId}/users`)
       get(dbRef)
         .then((snapshot) => {
+          setRegistered(true)
           // users配下にデータが登録されているか
           const value = snapshot.val()
           if (snapshot.exists()) {
@@ -158,15 +217,16 @@ export const WebPlayback: FC<Props> = () => {
               push(dbRef, {
                 name: name,
                 score: 0,
+                canAnser: true,
               })
             }
           } else {
             push(dbRef, {
               name: name,
               score: 0,
+              canAnser: true,
             })
           }
-          setRegistered(true)
         })
         .catch((error) => {
           console.error(error)
@@ -216,8 +276,15 @@ export const WebPlayback: FC<Props> = () => {
               <Typography className="center" variant="body1" gutterBottom>
                 あなたの名前：{name}
               </Typography>
+              {users[name] && !users[name].canAnser ? (
+                <Typography className="center" variant="body1" gutterBottom>
+                  不正解のため１回休みです
+                </Typography>
+              ) : (
+                ''
+              )}
               <AnserButton
-                disabled={disabled}
+                disabled={(users[name] && !users[name].canAnser) || disabled}
                 setDisabled={setDisabled}
                 onClickButton={onClickAnserButton}
               />

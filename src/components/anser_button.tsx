@@ -9,14 +9,13 @@ type Props = {
 }
 
 export const AnserButton: FC<Props> = (props) => {
-  const { disabled, setDisabled, onClickButton } = props
+  const { disabled, onClickButton } = props
   const [play] = useSound('/mp3/anser.mp3')
   return (
     <div
       className={styles['buzzer-quiz-button']}
       onClick={() => {
         if (!disabled) {
-          setDisabled(true)
           play()
           onClickButton()
         }

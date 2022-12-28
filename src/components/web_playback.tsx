@@ -5,7 +5,7 @@ import { getDatabase, onChildAdded, ref, set } from '@firebase/database'
 import { FirebaseError } from '@firebase/util'
 import firebaseApp from '@src/lib/firebase/firebase'
 import styles from '@styles/components/web_playback.module.scss'
-import { Anser, Ranking } from '@src/types/Types'
+import { Anser, User } from '@src/types/Types'
 import {
   get,
   onChildChanged,
@@ -28,6 +28,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [playWrongSound] = useSound('/mp3/wrong.mp3')
   const [playResultSound] = useSound('/mp3/result.mp3')
   const [roomId, setRoomId] = useState<string>('')
+  const [wrongUserKey, setWrongUserKey] = useState<string>('')
   const [is_paused, setPaused] = useState<boolean>(false)
   const [is_active, setActive] = useState<boolean>(false)
   const [player, setPlayer] = useState<Spotify.Player | null>(null)
@@ -35,7 +36,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const [deviceId, setDeviceId] = useState<string>('')
   const [isHide, setIsHide] = useState(false)
   const [ansers, setAnsers] = useState<Anser[]>([])
-  const [ranking, setRanking] = useState<Ranking>({})
+  const [ranking, setRanking] = useState<User>({})
 
   /* roomId生成 */
   useEffect(() => {
@@ -179,7 +180,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         .then((snapshot) => {
           const value = snapshot.val()
           if (snapshot.exists()) {
-            let rank: Ranking = {}
+            let rank: User = {}
             Object.keys(value).forEach((key) => {
               rank = Object.assign(rank, {
                 [value[key].name]: {
@@ -192,7 +193,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 // オブジェクトをスコアの降順にソート
                 return rank[a].score > rank[b].score ? -1 : 1
               })
-              .reduce((prev: Ranking, name, index): Ranking => {
+              .reduce((prev: User, name, index): User => {
                 // 順位をオブジェクトに設定(同一の正解数の場合は同順位)
                 const someOrder = Object.keys(prev).find((key) => {
                   return key !== name && prev[key].score === rank[name].score
@@ -205,6 +206,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                       someOrder && prev[someOrder].order
                         ? prev[someOrder].order
                         : index + 1,
+                    canAnser: rank[name].canAnser,
                   },
                 }
               }, {})
@@ -260,7 +262,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   }
 
   /* 正解ボタン押下時処理 */
-  const onClickCorrectButton = async () => {
+  const onClickCorrectButton = async (anser: string) => {
     if (ansers.length < 1) {
       return
     }
@@ -288,7 +290,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
           if (snapshot.exists()) {
             // 正解者の登録済みの点数を絞り込み
             const key = Object.keys(value).find((key) => {
-              return value[key].name === ansers[0].name
+              return value[key].name === anser
             })
             if (key !== undefined) {
               dbRef = ref(db, `result/${roomId}/users/${key}`)
@@ -298,14 +300,14 @@ export const WebPlayback: FC<Props> = ({ token }) => {
               })
             } else {
               await push(dbRef, {
-                name: ansers[0].name,
+                name: anser,
                 score: 1,
               })
             }
           } else {
             dbRef = ref(db, `result/${roomId}/users`)
             await push(dbRef, {
-              name: ansers[0].name,
+              name: anser,
               score: 1,
             })
           }
@@ -318,13 +320,50 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         console.log(e)
       }
     }
-
+    if (wrongUserKey !== '') {
+      resetCanAnserFlag(wrongUserKey)
+    }
     deleteIntro()
   }
 
   /* 不正解ボタン押下時処理 */
-  const onClickWrongButton = () => {
+  const onClickWrongButton = (anser: string) => {
     playWrongSound()
+    if (wrongUserKey !== '') {
+      resetCanAnserFlag(wrongUserKey)
+    }
+    // result/roomid/users/nameに点数登録
+    try {
+      const dbRef = ref(db, `result/${roomId}/users`)
+      get(dbRef)
+        .then((snapshot) => {
+          if (!snapshot.exists()) {
+            return
+          }
+          const value = snapshot.val()
+          const key = Object.keys(value).find((key) => {
+            return value[key].name === anser
+          })
+          if (!key) {
+            return
+          }
+          update(dbRef, {
+            [key]: {
+              name: value[key].name,
+              score: value[key].score,
+              canAnser: false,
+            },
+          })
+          setWrongUserKey(key)
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.log(e)
+      }
+    }
     deleteIntro()
   }
 
@@ -337,6 +376,27 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         console.log(e)
       }
     }
+  }
+
+  /* 対象ユーザの不正解時のペナルティクリア */
+  const resetCanAnserFlag = (userKey: string) => {
+    const dbRef = ref(db, `result/${roomId}/users/${userKey}`)
+    get(dbRef)
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          return
+        }
+        const value = snapshot.val()
+        update(dbRef, {
+          name: value.name,
+          score: value.score,
+          canAnser: true,
+        })
+        setWrongUserKey('')
+      })
+      .catch((error) => {
+        console.error(error)
+      })
   }
 
   if (!player) {
@@ -491,13 +551,13 @@ export const WebPlayback: FC<Props> = ({ token }) => {
               <div>
                 <button
                   className="full-width btn-spotify margin-bottom"
-                  onClick={onClickCorrectButton}
+                  onClick={() => onClickCorrectButton(ansers[0].name)}
                 >
                   正解
                 </button>
                 <button
                   className="full-width btn-spotify"
-                  onClick={onClickWrongButton}
+                  onClick={() => onClickWrongButton(ansers[0].name)}
                 >
                   不正解
                 </button>

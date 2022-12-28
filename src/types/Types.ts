@@ -20,9 +20,10 @@ export interface Anser {
   time: string
 }
 
-export interface Ranking {
+export interface User {
   [name: string]: {
     score: number
     order?: number
+    canAnser?: boolean
   }
 }
