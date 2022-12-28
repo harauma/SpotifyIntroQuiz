@@ -14,7 +14,9 @@ import dayjs from 'dayjs'
 import firebaseApp from '@src/lib/firebase/firebase'
 import { Anser } from '@src/types/Types'
 import { AnserButton } from '../components/anser_button'
-import { Button, TextField } from '@mui/material'
+import { Button, TextField, Typography } from '@mui/material'
+import { Container } from '@mui/system'
+import styles from '@styles/[id].module.scss'
 
 type Props = {
   token: string
@@ -178,64 +180,72 @@ export const WebPlayback: FC<Props> = () => {
 
   return (
     <>
-      <div className="container">
+      <Container maxWidth="sm">
         <div className="main-wrapper">
           {!registered ? (
-            <div>
-              <div>
-                <p className="center mb">あなたの名前を教えてください</p>
-              </div>
-              <div>
-                <TextField
-                  fullWidth
-                  label="名前"
-                  variant="outlined"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  sx={{
-                    mb: 1,
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'white', // 通常時のボーダー色(アウトライン)
-                      },
+            <div className={styles['guest-top']}>
+              <Typography className="center" variant="body1" gutterBottom>
+                あなたの名前を教えてください
+              </Typography>
+              <TextField
+                fullWidth
+                label="名前"
+                variant="outlined"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                sx={{
+                  mb: 1,
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'white', // 通常時のボーダー色(アウトライン)
                     },
-                  }}
-                />
-                <Button
-                  fullWidth
-                  variant="contained"
-                  onClick={onClickSubmitButton}
-                >
-                  登録
-                </Button>
-              </div>
+                  },
+                }}
+              />
+              <Button
+                fullWidth
+                size="large"
+                variant="contained"
+                onClick={onClickSubmitButton}
+              >
+                登録
+              </Button>
             </div>
           ) : (
             <div className="column">
-              <p className="center">あなたの名前：{name}</p>
+              <Typography className="center" variant="body1" gutterBottom>
+                あなたの名前：{name}
+              </Typography>
               <AnserButton
                 disabled={disabled}
                 setDisabled={setDisabled}
                 onClickButton={onClickAnserButton}
               />
               <div>
-                {Object.keys(ansers).length > 0 ? <p>回答順</p> : ''}
+                {Object.keys(ansers).length > 0 ? (
+                  <Typography className="center" variant="body1" gutterBottom>
+                    回答順
+                  </Typography>
+                ) : (
+                  ''
+                )}
                 {ansers
                   .sort((a, b) => {
                     return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
                   })
                   .map((anser, index) => (
                     <div key={anser.time}>
-                      <p>
-                        {index + 1}番：{anser.name}({anser.time})
-                      </p>
+                      <Typography className="left" variant="body1" gutterBottom>
+                        {index + 1}番：{anser.name}
+                        <br />({anser.time})
+                      </Typography>
                     </div>
                   ))}
               </div>
             </div>
           )}
         </div>
-      </div>
+      </Container>
     </>
   )
 }

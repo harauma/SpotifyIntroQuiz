@@ -26,6 +26,10 @@ code {
     monospace;
 }
 
+p {
+  font-size: calc(10px + 2vmin) !important; // 仮で実装
+}
+
 .full-width {
   width: 100%;
 }
@@ -89,7 +93,6 @@ code {
   margin: 0 auto;
   justify-content: center;
   position: relative;
-  width: fit-content;
   z-index: 1;
   @media screen and (max-width: 600px) {
     display: block;

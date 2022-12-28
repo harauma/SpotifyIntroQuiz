@@ -1,12 +1,17 @@
 .buzzer-quiz-button {
-  width: 300px;
-  height: 300px;
+  width: 600px;
+  height: 500px;
   display: block;
   margin: 0 auto;
   position: relative;
   user-select: none;
   &:hover {
     cursor: pointer;
+  }
+  @media screen and (max-width: 600px) {
+    width: 300px;
+    height: 250px;
+    margin-top: 80px;
   }
 }
 
@@ -17,9 +22,14 @@
 }
 
 .buzzer-quiz-button div.button-top {
-  width: 250px;
-  height: 250px;
-  margin: 0 25px;
+  width: 500px;
+  height: 500px;
+  margin: 0 50px;
+  @media screen and (max-width: 600px) {
+    width: 250px;
+    height: 250px;
+    margin: 0 25px;
+  }
 }
 
 .button-top1 {
@@ -29,7 +39,7 @@
 }
 
 .buzzer-quiz-button:active div.button-top1 {
-  transform: translateY(5px);
+  transform: translateY(10px);
 }
 
 .buzzer-quiz-button div.button-top2 {
@@ -49,8 +59,12 @@
 }
 
 .buzzer-quiz-button div.button-bottom {
-  width: 300px;
-  height: 300px;
+  width: 600px;
+  height: 600px;
+  @media screen and (max-width: 600px) {
+    width: 300px;
+    height: 300px;
+  }
 }
 
 .buzzer-quiz-button div.button-bottom1 {
