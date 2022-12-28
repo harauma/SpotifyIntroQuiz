@@ -426,7 +426,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         <div className="container">
           <div className="now-playing__area">
             <div className="main-wrapper">
-              <div className={isHide ? 'hide' : 'show'}>
+              <div className={'playing__left ' + (isHide ? 'hide' : 'show')}>
                 {current_track && current_track.album.images[0].url ? (
                   <img
                     src={current_track.album.images[0].url}
@@ -513,6 +513,12 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 </button>
               </div>
               <div>
+                <button
+                  className="full-width btn-spotify"
+                  onClick={onClickLinkButton}
+                >
+                  {roomId !== '' ? 'リンクコピー' : 'リンク生成'}
+                </button>
                 {roomId !== '' ? (
                   <Link
                     color="white"
@@ -532,44 +538,51 @@ export const WebPlayback: FC<Props> = ({ token }) => {
                 ) : (
                   <p>リンクが生成されていません</p>
                 )}
-                <button
-                  className="full-width btn-spotify"
-                  onClick={onClickLinkButton}
-                >
-                  {roomId !== '' ? 'リンクコピー' : 'リンク生成'}
-                </button>
+              </div>
+            </div>
+            <div className={styles['users-area']}>
+              <div className={styles['users-area-left']}>
                 <p className="left">回答者</p>
-                {ansers
-                  .sort((a, b) => {
-                    return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
-                  })
-                  .map((anser, index) => (
-                    <div key={index}>
-                      <p className="left">
-                        {index + 1}番：{anser.name}({anser.time})
-                      </p>
-                    </div>
-                  ))}
-              </div>
-              <div>
-                <button
-                  className="full-width btn-spotify margin-bottom"
-                  onClick={() => onClickCorrectButton(ansers[0].name)}
-                >
-                  正解
-                </button>
-                <button
-                  className="full-width btn-spotify"
-                  onClick={() => onClickWrongButton(ansers[0].name)}
-                >
-                  不正解
-                </button>
-              </div>
-              <div>
-                {Object.keys(ranking).length > 0 ? (
-                  <p className="left">ランキング</p>
+                {ansers.length > 0 ? (
+                  ansers
+                    .sort((a, b) => {
+                      return dayjs(a.time).isAfter(dayjs(b.time)) ? 1 : -1
+                    })
+                    .map((anser, index) => (
+                      <div key={index}>
+                        <p className="left">
+                          {index + 1}番：{anser.name}({anser.time})
+                        </p>
+                      </div>
+                    ))
+                ) : (
+                  <p className="left">対象のユーザーが存在しません</p>
+                )}
+                {ansers.length > 0 ? (
+                  <>
+                    <button
+                      className="full-width btn-spotify margin-bottom"
+                      onClick={() => onClickCorrectButton(ansers[0].name)}
+                    >
+                      正解
+                    </button>
+                    <button
+                      className="full-width btn-spotify"
+                      onClick={() => onClickWrongButton(ansers[0].name)}
+                    >
+                      不正解
+                    </button>
+                  </>
                 ) : (
                   ''
+                )}
+              </div>
+              <div className={styles['users-area-right']}>
+                <p className="left">ランキング</p>
+                {Object.keys(ranking).length > 0 ? (
+                  ''
+                ) : (
+                  <p className="left">対象のユーザーが存在しません</p>
                 )}
                 {Object.keys(ranking).map((name, index) => (
                   <p className="left" key={index}>

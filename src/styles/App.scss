@@ -120,6 +120,14 @@ a {
     width: fit-content;
   }
 
+  &__left {
+    margin-right: 10px;
+  }
+
+  &__right {
+    margin-left: 10px;
+  }
+
   &__text-area {
     text-align: center;
   }
