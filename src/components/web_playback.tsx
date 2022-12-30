@@ -225,7 +225,15 @@ export const WebPlayback: FC<Props> = ({ token }) => {
       return
     }
     playQuestionSound()
-    player.nextTrack()
+    const now = dayjs()
+    const dbRefResult = ref(db, `result/${roomId}`)
+    update(dbRefResult, {
+      doStart: true,
+      startTime: now.format('YYYY/MM/DD HH:mm:ss.SSS'),
+    })
+    setTimeout(() => {
+      player.nextTrack()
+    }, 2000)
   }
 
   /* ゲスト招待用レコード作成、リンクコピー処理 */
@@ -239,6 +247,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
         set(dbRefResult, {
           token: token,
           deviceId: deviceId,
+          doStart: false,
         })
       } catch (e) {
         if (e instanceof FirebaseError) {
@@ -360,7 +369,7 @@ export const WebPlayback: FC<Props> = ({ token }) => {
           update(dbRef, {
             [key]: {
               name: value[key].name,
-              score: value[key].score,
+              score: value[key].score > 0 ? value[key].score - 1 : 0,
               canAnser: false,
             },
           })
@@ -381,11 +390,20 @@ export const WebPlayback: FC<Props> = ({ token }) => {
   const deleteIntro = () => {
     try {
       remove(ref(db, `intro/${roomId}`))
+      clearDoStart()
     } catch (e) {
       if (e instanceof FirebaseError) {
         console.log(e)
       }
     }
+  }
+
+  /* スタートフラグをFalseに設定 */
+  const clearDoStart = () => {
+    const dbRefResult = ref(db, `result/${roomId}`)
+    update(dbRefResult, {
+      doStart: false,
+    })
   }
 
   /* 対象ユーザの不正解時のペナルティクリア */

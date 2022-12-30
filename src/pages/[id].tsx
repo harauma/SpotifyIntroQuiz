@@ -28,10 +28,12 @@ export const WebPlayback: FC<Props> = () => {
   const router = useRouter()
   const [registered, setRegistered] = useState<boolean>(false)
   const [disabled, setDisabled] = useState<boolean>(false)
+  const [timerFlag, setTimerFlag] = useState<boolean>(false)
   const [token, setToken] = useState<string>('')
   const [deviceId, setDeviceId] = useState<string>('')
   const [roomId, setRoomId] = useState<string>('')
   const [name, setName] = useState<string>('')
+  const [timer, setTimer] = useState<number>(0)
   const [ansers, setAnsers] = useState<Anser[]>([])
   const [users, setUsers] = useState<User>({})
 
@@ -49,8 +51,9 @@ export const WebPlayback: FC<Props> = () => {
     get(dbRef)
       .then((snapshot) => {
         if (snapshot.exists()) {
-          setToken(snapshot.val().token)
-          setDeviceId(snapshot.val().deviceId)
+          const value = snapshot.val()
+          setToken(value.token)
+          setDeviceId(value.deviceId)
         } else {
           console.log('No data available')
         }
@@ -118,7 +121,6 @@ export const WebPlayback: FC<Props> = () => {
       const dbRef = ref(db, `result/${roomId}/users`)
       return onChildAdded(dbRef, (snapshot) => {
         const value = snapshot.val()
-        console.log(value)
         setUsers((prev) => {
           return {
             ...prev,
@@ -146,7 +148,6 @@ export const WebPlayback: FC<Props> = () => {
       const dbRef = ref(db, `result/${roomId}/users`)
       return onChildChanged(dbRef, (snapshot) => {
         const value = snapshot.val()
-        console.log(value)
         setUsers((prev) => {
           return {
             ...prev,
@@ -156,6 +157,63 @@ export const WebPlayback: FC<Props> = () => {
             },
           }
         })
+      })
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        console.error(e)
+      }
+      return
+    }
+  }, [registered])
+
+  /* 問題出題検知 */
+  useEffect(() => {
+    if (roomId === '' || name === '') {
+      return
+    }
+    try {
+      const dbRef = ref(db, `result/${roomId}`)
+      return onChildChanged(dbRef, (snapshot) => {
+        if (
+          !snapshot.exists() ||
+          snapshot.key !== 'doStart' ||
+          !snapshot.val()
+        ) {
+          return
+        }
+        const dbRef = ref(db, `result/${roomId}/users`)
+        get(dbRef)
+          .then((s) => {
+            const value = s.val()
+            const findKey = Object.keys(value).find((key) => {
+              return value[key].name === name
+            })
+            if (!findKey) {
+              return
+            }
+            setUsers({
+              [value[findKey].name]: {
+                score: value[findKey].score,
+                canAnser: value[findKey].canAnser,
+              },
+            })
+            let num = value[findKey].score
+            setTimerFlag(true)
+            setTimeout(() => {
+              setTimer(num)
+              const interval = setInterval(() => {
+                num -= 1
+                setTimer(num)
+              }, 1000)
+              setTimeout(() => {
+                setTimerFlag(false)
+                clearInterval(interval)
+              }, num * 1000)
+            }, 2000)
+          })
+          .catch((error) => {
+            console.error(error)
+          })
       })
     } catch (e) {
       if (e instanceof FirebaseError) {
@@ -280,11 +338,19 @@ export const WebPlayback: FC<Props> = () => {
                 <Typography className="center" variant="body1" gutterBottom>
                   不正解のため１回休みです
                 </Typography>
+              ) : timer > 0 ? (
+                <Typography className="center" variant="body1" gutterBottom>
+                  正解数ハンデ残り{timer}秒
+                </Typography>
               ) : (
                 ''
               )}
               <AnserButton
-                disabled={(users[name] && !users[name].canAnser) || disabled}
+                disabled={
+                  (users[name] && !users[name].canAnser) ||
+                  timerFlag ||
+                  disabled
+                }
                 setDisabled={setDisabled}
                 onClickButton={onClickAnserButton}
               />
